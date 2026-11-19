@@ -1,0 +1,16 @@
+{
+  "name": "instagram-soz-botu",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Her gün 20:00'de Instagram'a otomatik ayet/hadis/söz paylaşan bot",
+  "scripts": {
+    "onizleme": "node src/daily.js onizleme 5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.1.1"
+  }
+}

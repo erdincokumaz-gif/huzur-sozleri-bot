@@ -1,0 +1,66 @@
+name: Günlük Instagram paylaşımı
+
+on:
+  schedule:
+    # 16:30 UTC = 19:30 Türkiye. GitHub zamanlamaları birkaç dakika gecikebildiği için
+    # erken başlar, bot 20:00'ye kadar bekleyip tam saatinde paylaşır.
+    - cron: '30 16 * * *'
+  workflow_dispatch:
+    inputs:
+      hemen:
+        description: 'Saati beklemeden hemen paylaş (test için)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-paylasim
+  cancel-in-progress: false
+
+jobs:
+  paylas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Görseli hazırla
+        id: hazirla
+        run: node src/daily.js hazirla
+        env:
+          HEMEN: ${{ github.event_name == 'workflow_dispatch' && inputs.hemen }}
+
+      - name: Görseli repoya yükle
+        if: steps.hazirla.outputs.skip != 'true'
+        run: |
+          git config user.name "instagram-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add posts
+          git commit -m "Görsel: ${{ steps.hazirla.outputs.date }}"
+          git pull --rebase
+          git push
+
+      - name: Instagram'a paylaş
+        if: steps.hazirla.outputs.skip != 'true'
+        run: node src/daily.js paylas
+        env:
+          POST_DATE: ${{ steps.hazirla.outputs.date }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+
+      - name: Paylaşıldı olarak işaretle
+        if: steps.hazirla.outputs.skip != 'true'
+        run: |
+          git add posts
+          git commit -m "Paylaşıldı: ${{ steps.hazirla.outputs.date }}"
+          git pull --rebase
+          git push
