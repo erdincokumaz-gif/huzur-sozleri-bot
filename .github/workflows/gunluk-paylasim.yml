@@ -38,6 +38,7 @@ jobs:
         run: node src/daily.js hazirla
         env:
           HEMEN: ${{ github.event_name == 'workflow_dispatch' && inputs.hemen }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
 
       - name: Görseli repoya yükle
         if: steps.hazirla.outputs.skip != 'true'

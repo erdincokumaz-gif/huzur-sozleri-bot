@@ -92,6 +92,12 @@ async function hazirla() {
   const tarih = simdi.tarih;
   cikti('date', tarih);
 
+  if (process.env.GITHUB_ACTIONS && !process.env.IG_ACCESS_TOKEN) {
+    console.log('IG_ACCESS_TOKEN secret henüz eklenmemiş, paylaşım atlanıyor. (KURULUM.md adım 3-4)');
+    cikti('skip', 'true');
+    return;
+  }
+
   if (fs.existsSync(path.join(POSTS, `${tarih}.done`))) {
     console.log(`${tarih} zaten paylaşılmış, atlanıyor.`);
     cikti('skip', 'true');
