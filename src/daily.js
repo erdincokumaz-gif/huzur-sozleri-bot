@@ -92,8 +92,12 @@ async function hazirla() {
   const tarih = simdi.tarih;
   cikti('date', tarih);
 
-  if (process.env.GITHUB_ACTIONS && !process.env.IG_ACCESS_TOKEN) {
-    console.log('IG_ACCESS_TOKEN secret henüz eklenmemiş, paylaşım atlanıyor. (KURULUM.md adım 3-4)');
+  // Token yoksa paylaşımı Make.com yapar: bot sadece günün görselini erkenden üretir, beklemez
+  const sadeceGorsel = !process.env.IG_ACCESS_TOKEN;
+  cikti('publish', sadeceGorsel ? 'false' : 'true');
+
+  if (sadeceGorsel && fs.existsSync(path.join(POSTS, `${tarih}.jpg`))) {
+    console.log(`${tarih} görseli zaten hazır (paylaşımı Make.com yapacak).`);
     cikti('skip', 'true');
     return;
   }
@@ -104,7 +108,7 @@ async function hazirla() {
     return;
   }
 
-  if (process.env.HEMEN !== 'true') {
+  if (process.env.HEMEN !== 'true' && !sadeceGorsel) {
     const [hh, mm] = config.paylasimSaati.split(':').map(Number);
     const kalan = hh * 60 + mm - simdi.dakika;
     if (kalan > 150) {

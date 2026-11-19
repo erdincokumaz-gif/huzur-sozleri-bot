@@ -5,6 +5,9 @@ on:
     # 16:30 UTC = 19:30 Türkiye. GitHub zamanlamaları birkaç dakika gecikebildiği için
     # erken başlar, bot 20:00'ye kadar bekleyip tam saatinde paylaşır.
     - cron: '30 16 * * *'
+    # 06:00 UTC = 09:00 Türkiye: Make.com modunda günün görseli erkenden hazırlanır
+    # (Make.com akşam 20:00'de bu görseli alıp paylaşır)
+    - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
       hemen:
@@ -51,7 +54,7 @@ jobs:
           git push
 
       - name: Instagram'a paylaş
-        if: steps.hazirla.outputs.skip != 'true'
+        if: steps.hazirla.outputs.skip != 'true' && steps.hazirla.outputs.publish == 'true'
         run: node src/daily.js paylas
         env:
           POST_DATE: ${{ steps.hazirla.outputs.date }}
@@ -59,7 +62,7 @@ jobs:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
 
       - name: Paylaşıldı olarak işaretle
-        if: steps.hazirla.outputs.skip != 'true'
+        if: steps.hazirla.outputs.skip != 'true' && steps.hazirla.outputs.publish == 'true'
         run: |
           git add posts
           git commit -m "Paylaşıldı: ${{ steps.hazirla.outputs.date }}"
